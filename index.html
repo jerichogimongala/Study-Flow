@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f3">
+  <title>Studyflow — your exam study planner</title>
+  <meta name="description" content="Build a calm, realistic study schedule for your next exam. Free, private, and no account needed.">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202b27;
+      --muted: #69756e;
+      --line: #e2e8df;
+      --paper: #fff;
+      --canvas: #f7f8f3;
+      --green: #28634e;
+      --green-dark: #204d3d;
+      --mint: #e7f1e9;
+      --lime: #d7ed9b;
+      --orange: #bd6848;
+      --shadow: 0 16px 44px rgba(39, 66, 50, .07);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1180px;
+      padding: 0 28px;
+      margin: auto;
+    }
+    .brand { display: flex; gap: 10px; align-items: center; font-weight: 750; letter-spacing: -.04em; font-size: 20px; }
+    .brand-mark {
+      width: 31px; height: 31px; border-radius: 10px; background: var(--green);
+      display: grid; place-items: center; color: white; font-size: 16px; letter-spacing: 0;
+    }
+    .privacy { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 7px; }
+    .privacy svg { color: var(--green); }
+    main { max-width: 1180px; padding: 28px 28px 72px; margin: auto; }
+    .intro { max-width: 690px; margin: 12px auto 32px; text-align: center; }
+    .eyebrow { text-transform: uppercase; color: var(--green); font-size: 11px; font-weight: 750; letter-spacing: .14em; }
+    h1 { font-size: clamp(36px, 5.2vw, 57px); line-height: 1.08; letter-spacing: -.055em; margin: 12px 0 13px; }
+    .intro p { color: var(--muted); margin: 0; font-size: 16px; }
+    .layout { display: grid; grid-template-columns: minmax(310px, 390px) 1fr; align-items: start; gap: 22px; }
+    .card { background: var(--paper); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+    .setup { padding: 25px; }
+    .card-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .step {
+      width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center;
+      background: var(--mint); color: var(--green); font-size: 14px; font-weight: 750;
+    }
+    h2 { font-size: 18px; letter-spacing: -.025em; margin: 0; }
+    .field { margin-bottom: 19px; }
+    label, .field-label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 7px; }
+    .hint { color: var(--muted); font-size: 12px; font-weight: 400; margin-left: 4px; }
+    input[type="date"], input[type="time"], input[type="number"], input[type="text"], select {
+      width: 100%; height: 43px; border: 1px solid #d9e0d8; border-radius: 9px;
+      color: var(--ink); background: #fff; padding: 0 11px; outline: none;
+    }
+    input:focus, select:focus { border-color: #75a58a; box-shadow: 0 0 0 3px rgba(40, 99, 78, .11); }
+    .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .day-check { position: relative; }
+    .day-check input { position: absolute; opacity: 0; }
+    .day-check span {
+      display: grid; place-items: center; height: 36px; border: 1px solid #dfe5dc;
+      border-radius: 8px; color: #647168; font-size: 11px; font-weight: 650; cursor: pointer;
+    }
+    .day-check input:checked + span { color: var(--green-dark); border-color: #a8c5ae; background: var(--mint); }
+    .day-check input:focus-visible + span { outline: 3px solid rgba(40, 99, 78, .2); }
+    .subjects-title { display: flex; justify-content: space-between; align-items: center; margin: 23px 0 10px; }
+    .subjects-title .field-label { margin: 0; }
+    .text-button { border: 0; background: none; color: var(--green); font-size: 12px; font-weight: 700; padding: 5px; }
+    .text-button:hover { color: var(--green-dark); text-decoration: underline; }
+    .subject-list { display: grid; gap: 8px; }
+    .subject-row { display: grid; grid-template-columns: minmax(0, 1fr) 126px 30px; gap: 7px; align-items: center; }
+    .subject-row input, .subject-row select { height: 39px; font-size: 12px; }
+    .remove-subject {
+      width: 29px; height: 29px; padding: 0; border: 0; border-radius: 7px;
+      background: transparent; color: #849087; font-size: 19px;
+    }
+    .remove-subject:hover { color: #a33e31; background: #fff1ed; }
+    .generate {
+      width: 100%; height: 49px; border: 0; border-radius: 10px; background: var(--green);
+      color: white; font-weight: 700; margin-top: 20px; transition: background .15s, transform .15s;
+    }
+    .generate:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .error { min-height: 0; color: #a33e31; font-size: 12px; margin: 8px 0 0; }
+    .results { min-height: 580px; overflow: hidden; }
+    .empty-state { min-height: 580px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 44px; }
+    .illustration {
+      display: grid; place-items: center; width: 88px; height: 88px; border-radius: 28px;
+      background: var(--mint); color: var(--green); margin-bottom: 22px;
+    }
+    .empty-state h2 { font-size: 22px; margin-bottom: 9px; }
+    .empty-state p { max-width: 330px; color: var(--muted); margin: 0; font-size: 14px; }
+    .empty-note { margin-top: 25px; color: #7d887f; font-size: 12px; }
+    .results-content { display: none; }
+    .results-content.visible { display: block; }
+    .results-head { padding: 24px 26px 20px; border-bottom: 1px solid var(--line); }
+    .results-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .results-head h2 { font-size: 22px; }
+    .results-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+    .saved-plans { display: flex; align-items: center; gap: 7px; }
+    .saved-plans label { margin: 0; white-space: nowrap; font-size: 12px; color: var(--muted); }
+    .saved-plans select { width: auto; min-width: 190px; max-width: 250px; height: 36px; font-size: 12px; }
+    .action-button {
+      display: inline-flex; gap: 7px; align-items: center; justify-content: center;
+      height: 36px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px;
+      background: white; color: #435149; font-size: 12px; font-weight: 650;
+    }
+    .action-button:hover { border-color: #a8c5ae; color: var(--green); }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 20px; }
+    .stat { background: #f5f8f3; border-radius: 10px; padding: 12px 14px; }
+    .stat strong { display: block; font-size: 20px; line-height: 1.15; letter-spacing: -.04em; }
+    .stat span { color: var(--muted); font-size: 11px; }
+    .schedule { padding: 14px 25px 25px; }
+    .schedule-day { padding: 16px 0 12px; border-bottom: 1px solid #edf0ec; }
+    .schedule-day:last-child { border-bottom: 0; }
+    .date-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+    .date-heading strong { font-size: 13px; }
+    .date-heading span { color: var(--muted); font-size: 11px; }
+    .session {
+      display: grid; grid-template-columns: 8px 1fr auto; gap: 10px; align-items: center;
+      padding: 8px 10px; border-radius: 8px; background: #f7f8f5; margin-top: 5px;
+    }
+    .session-dot { width: 7px; height: 7px; border-radius: 50%; background: #77a589; }
+    .session-name { font-size: 12px; font-weight: 650; }
+    .session-duration { color: var(--muted); font-size: 11px; }
+    .rest-day { color: #7f8981; font-size: 12px; padding: 7px 0 2px; }
+    .footer-note { border-top: 1px solid var(--line); padding: 16px 25px; background: #fbfcfa; color: var(--muted); font-size: 11px; }
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+      .setup { padding: 22px; }
+      .results, .empty-state { min-height: 330px; }
+      .empty-state { padding: 36px 24px; }
+    }
+    @media (max-width: 520px) {
+      .topbar { height: 64px; padding: 0 18px; }
+      main { padding: 22px 14px 48px; }
+      .intro { margin: 9px auto 24px; }
+      .intro p { font-size: 14px; }
+      .privacy { font-size: 11px; }
+      .setup { padding: 19px 16px; }
+      .results-head { padding: 20px 16px 16px; }
+      .results-top { display: block; }
+      .actions { align-items: stretch; }
+      .saved-plans { width: 100%; }
+      .saved-plans select { width: 100%; max-width: none; }
+      .actions { margin-top: 14px; }
+      .stats { gap: 6px; }
+      .stat { padding: 10px; }
+      .stat strong { font-size: 17px; }
+      .schedule { padding: 8px 16px 18px; }
+      .session { grid-template-columns: 7px minmax(0, 1fr); }
+      .session-duration { grid-column: 2; text-align: left; }
+      .subject-row { grid-template-columns: minmax(0, 1fr) 112px 27px; gap: 5px; }
+      .subject-row input, .subject-row select { padding: 0 7px; }
+      .footer-note { padding: 14px 16px; }
+    }
+    @media print {
+      @page { margin: 16mm 14mm; }
+      body { background: white; color: #202b27; font: 10pt/1.45 Arial, sans-serif; }
+      .topbar, .intro, .setup, .actions, .footer-note { display: none !important; }
+      main { max-width: none; padding: 0; }
+      .layout { display: block; }
+      .card { min-height: 0; overflow: visible; border: 0; box-shadow: none; }
+      .results-content { display: block !important; }
+      .results-head { padding: 0 0 12px; border-bottom: 2px solid #dce5dc; }
+      .results-head h2 { font-size: 22pt; }
+      .results-head p { color: #526258; font-size: 10pt; }
+      .stats { gap: 8px; margin-top: 16px; }
+      .stat { border: 1px solid #e2e8df; background: #f5f8f3 !important; padding: 9px 12px; }
+      .stat strong { font-size: 16pt; }
+      .stat span { color: #526258; font-size: 9pt; }
+      .schedule { padding: 0; }
+      .schedule-day { padding: 10px 0 8px; border-bottom: 1px solid #dfe6df; break-inside: avoid; page-break-inside: avoid; }
+      .date-heading { margin-bottom: 5px; break-after: avoid; page-break-after: avoid; }
+      .date-heading strong { font-size: 11pt; }
+      .date-heading span, .session-duration { color: #526258; font-size: 9pt; }
+      .session { grid-template-columns: 7px 1fr auto; padding: 5px 8px; border-bottom: 1px solid #edf0ec; border-radius: 0; background: white !important; margin-top: 0; break-inside: avoid; }
+      .session-name { font-size: 10pt; }
+      .session-duration { grid-column: auto; text-align: right; }
+      .session-dot { background: #77a589 !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">S</span> studyflow</div>
+    <div class="privacy">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 3 8.1 7 10 4-1.9 7-5.4 7-10V6l-7-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Your plan stays on this device
+    </div>
+  </header>
+  <main>
+    <section class="intro">
+      <div class="eyebrow">A little structure goes a long way</div>
+      <h1>Make a plan.<br>Keep your head clear.</h1>
+      <p>Tell us what you're studying. We'll turn the days ahead into a plan you can actually follow.</p>
+    </section>
+
+    <div class="layout">
+      <form class="card setup" id="planner-form">
+        <div class="card-heading">
+          <span class="step">01</span>
+          <div><h2>Your exam</h2></div>
+        </div>
+        <div class="field">
+          <label for="exam-date">Exam date</label>
+          <input type="date" id="exam-date" required>
+        </div>
+        <div class="two-fields">
+          <div class="field">
+            <label for="hours">Study hours <span class="hint">per day</span></label>
+            <input type="number" id="hours" min="0.5" max="12" step="0.5" value="2" required>
+          </div>
+          <div class="field">
+            <label for="session-length">Session length</label>
+            <select id="session-length">
+              <option value="25">25 min</option>
+              <option value="40">40 min</option>
+              <option value="50" selected>50 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-fields">
+          <div class="field">
+            <label for="start-time">Start studying</label>
+            <input type="time" id="start-time" value="18:00" required>
+          </div>
+          <div class="field">
+            <label for="break-length">Break between sessions</label>
+            <select id="break-length">
+              <option value="0">No break</option>
+              <option value="5">5 minutes</option>
+              <option value="10" selected>10 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="20">20 minutes</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field-label">Days you can study</span>
+          <div class="weekday-grid" aria-label="Select study days">
+            <label class="day-check"><input type="checkbox" value="1" checked><span>Mon</span></label>
+            <label class="day-check"><input type="checkbox" value="2" checked><span>Tue</span></label>
+            <label class="day-check"><input type="checkbox" value="3" checked><span>Wed</span></label>
+            <label class="day-check"><input type="checkbox" value="4" checked><span>Thu</span></label>
+            <label class="day-check"><input type="checkbox" value="5" checked><span>Fri</span></label>
+            <label class="day-check"><input type="checkbox" value="6"><span>Sat</span></label>
+            <label class="day-check"><input type="checkbox" value="0"><span>Sun</span></label>
+          </div>
+        </div>
+        <div class="subjects-title">
+          <span class="field-label">Your subjects <span class="hint">focus more on what feels tough</span></span>
+          <button type="button" class="text-button" id="add-subject">+ Add subject</button>
+        </div>
+        <div class="subject-list" id="subject-list"></div>
+        <p class="error" id="form-error" role="alert"></p>
+        <button type="submit" class="generate">Build my study plan <span aria-hidden="true">→</span></button>
+      </form>
+
+      <section class="card results" aria-live="polite" aria-label="Your study plan">
+        <div class="empty-state" id="empty-state">
+          <div class="illustration" aria-hidden="true">
+            <svg width="44" height="44" viewBox="0 0 48 48" fill="none"><rect x="8" y="10" width="32" height="30" rx="6" stroke="currentColor" stroke-width="2"/><path d="M16 7v7m16-7v7M8 19h32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m18 29 4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h2>Your plan will feel doable.</h2>
+          <p>Add your exam date and subjects, and we'll map out bite-sized study sessions with room to breathe.</p>
+          <div class="empty-note">No account. No pressure. Just a plan.</div>
+        </div>
+        <div class="results-content" id="results-content">
+          <div class="results-head">
+            <div class="results-top">
+              <div><h2>Your study plan</h2><p id="plan-subtitle"></p></div>
+              <div class="actions">
+                <div class="saved-plans">
+                  <label for="saved-plan-select">Plan</label>
+                  <select id="saved-plan-select" aria-label="Choose the plan to view, print, or download"></select>
+                </div>
+                <button type="button" class="action-button" id="delete-plan" aria-label="Delete study plan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Delete
+                </button>
+                <button type="button" class="action-button" id="download-plan" aria-label="Download selected plan as PDF">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Download PDF
+                </button>
+                <button type="button" class="action-button" id="print-plan" aria-label="Print selected plan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 8V4h10v4M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 14h10v7H7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                  Print selected
+                </button>
+              </div>
+            </div>
+            <div class="stats">
+              <div class="stat"><strong id="stat-days">0</strong><span>study days</span></div>
+              <div class="stat"><strong id="stat-hours">0</strong><span>planned hours</span></div>
+              <div class="stat"><strong id="stat-sessions">0</strong><span>study sessions</span></div>
+            </div>
+          </div>
+          <div class="schedule" id="schedule"></div>
+          <div class="footer-note">Take a 5–10 minute break between sessions. Adjust the plan whenever life happens.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const form = document.getElementById("planner-form");
+      const subjectList = document.getElementById("subject-list");
+      const error = document.getElementById("form-error");
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dateInput = document.getElementById("exam-date");
+      const isoDate = (date) => {
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 10);
+      };
+      const initialExamDate = new Date(today);
+      initialExamDate.setDate(initialExamDate.getDate() + 30);
+      dateInput.min = isoDate(today);
+      dateInput.value = isoDate(initialExamDate);
+
+      function addSubject(name = "", confidence = "getting-there") {
+        const row = document.createElement("div");
+        row.className = "subject-row";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "subject-name";
+        input.maxLength = 45;
+        input.placeholder = "e.g. Biology";
+        input.setAttribute("aria-label", "Subject name");
+        input.value = name;
+        const select = document.createElement("select");
+        select.className = "subject-confidence";
+        select.setAttribute("aria-label", "How confident you feel");
+        [["needs-work", "Needs work"], ["getting-there", "Getting there"], ["confident", "Confident"]].forEach(([value, label]) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = label;
+          option.selected = value === confidence;
+          select.append(option);
+        });
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-subject";
+        remove.setAttribute("aria-label", "Remove subject");
+        remove.textContent = "×";
+        remove.addEventListener("click", () => {
+          row.remove();
+          if (!subjectList.children.length) addSubject();
+        });
+        row.append(input, select, remove);
+        subjectList.append(row);
+      }
+
+      addSubject("Biology", "needs-work");
+      addSubject("History", "getting-there");
+      addSubject("Mathematics", "confident");
+
+      document.getElementById("add-subject").addEventListener("click", () => {
+        addSubject();
+        subjectList.lastElementChild.querySelector("input").focus();
+      });
+
+      const confidenceWeight = { "needs-work": 3, "getting-there": 2, confident: 1 };
+      const storageKey = "studyflow-saved-plans";
+      let savedPlans = [];
+      let activePlanId = null;
+
+      function loadSavedPlans() {
+        try {
+          const storedPlans = localStorage.getItem(storageKey);
+          if (!storedPlans) return;
+          const parsedPlans = JSON.parse(storedPlans);
+          if (!Array.isArray(parsedPlans) || parsedPlans.some((plan) =>
+            !plan || typeof plan.id !== "string" || typeof plan.title !== "string" ||
+            typeof plan.examDate !== "string" || !Array.isArray(plan.days) ||
+            (plan.startTime !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(plan.startTime)) ||
+            (plan.breakMinutes !== undefined && (!Number.isInteger(plan.breakMinutes) || plan.breakMinutes < 0 || plan.breakMinutes > 60)) ||
+            !plan.days.every((day) => typeof day.date === "string" && Array.isArray(day.sessions) &&
+              day.sessions.every((session) => typeof session.subject === "string" && Number.isFinite(session.minutes)))
+          )) {
+            throw new Error("Saved study plans have an invalid format.");
+          }
+          savedPlans = parsedPlans;
+        } catch (storageError) {
+          error.textContent = `Unable to load saved plans on this device: ${storageError.message}`;
+        }
+      }
+
+      function persistSavedPlans() {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(savedPlans));
+          return true;
+        } catch (storageError) {
+          error.textContent = `Unable to save plans on this device: ${storageError.message}`;
+          return false;
+        }
+      }
+
+      function updatePlanSelector() {
+        const select = document.getElementById("saved-plan-select");
+        select.replaceChildren();
+        savedPlans.forEach((plan) => {
+          const option = document.createElement("option");
+          option.value = plan.id;
+          option.textContent = plan.title;
+          option.selected = plan.id === activePlanId;
+          select.append(option);
+        });
+      }
+
+      function showActivePlan() {
+        updatePlanSelector();
+        const activePlan = savedPlans.find((plan) => plan.id === activePlanId);
+        if (!activePlan) {
+          activePlanId = null;
+          document.title = "Studyflow — your exam study planner";
+          document.getElementById("results-content").classList.remove("visible");
+          document.getElementById("schedule").replaceChildren();
+          document.getElementById("empty-state").hidden = false;
+          return;
+        }
+        renderPlan(activePlan);
+      }
+
+      loadSavedPlans();
+      if (savedPlans.length) {
+        activePlanId = savedPlans[0].id;
+        showActivePlan();
+      }
+
+      function createPlan() {
+        const examDate = new Date(`${dateInput.value}T00:00:00`);
+        const hours = Number(document.getElementById("hours").value);
+        const sessionLength = Number(document.getElementById("session-length").value);
+        const startTime = document.getElementById("start-time").value;
+        const breakMinutes = Number(document.getElementById("break-length").value);
+        const studyWeekdays = [...form.querySelectorAll(".weekday-grid input:checked")].map((input) => Number(input.value));
+        const subjects = [...subjectList.querySelectorAll(".subject-row")].map((row) => ({
+          name: row.querySelector(".subject-name").value.trim(),
+          confidence: row.querySelector(".subject-confidence").value
+        })).filter((subject) => subject.name);
+
+        if (!dateInput.value || Number.isNaN(examDate.getTime()) || examDate < today) {
+          error.textContent = "Choose today or a future date for your exam.";
+          dateInput.focus();
+          return;
+        }
+        if (!Number.isFinite(hours) || hours < 0.5 || hours > 12) {
+          error.textContent = "Choose between 0.5 and 12 study hours per day.";
+          document.getElementById("hours").focus();
+          return;
+        }
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime)) {
+          error.textContent = "Choose a valid daily start time.";
+          document.getElementById("start-time").focus();
+          return;
+        }
+        if (!studyWeekdays.length) {
+          error.textContent = "Select at least one day you can study.";
+          return;
+        }
+        if (!subjects.length) {
+          error.textContent = "Add at least one subject to build your plan.";
+          subjectList.querySelector("input").focus();
+          return;
+        }
+
+        const availableDays = [];
+        const cursor = new Date(today);
+        while (cursor < examDate) {
+          if (studyWeekdays.includes(cursor.getDay())) availableDays.push(new Date(cursor));
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        if (!availableDays.length) {
+          error.textContent = "There are no available study days before your exam. Choose a later date or more study days.";
+          return;
+        }
+        error.textContent = "";
+        const studyMinutes = Math.round(hours * 60);
+        const sessionCount = Math.max(1, Math.ceil(studyMinutes / sessionLength));
+        const [startHour, startMinute] = startTime.split(":").map(Number);
+        if (startHour * 60 + startMinute + studyMinutes + breakMinutes * (sessionCount - 1) > 24 * 60) {
+          error.textContent = "This study schedule would end after midnight. Choose an earlier start time or shorter breaks.";
+          document.getElementById("start-time").focus();
+          return;
+        }
+        const weights = subjects.map((subject) => confidenceWeight[subject.confidence]);
+        const subjectScores = subjects.map(() => 0);
+        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+        const plan = availableDays.map((date) => {
+          const sessions = [];
+          let remainingMinutes = studyMinutes;
+          while (remainingMinutes > 0) {
+            let selectedIndex = 0;
+            for (let subjectIndex = 0; subjectIndex < subjects.length; subjectIndex += 1) {
+              subjectScores[subjectIndex] += weights[subjectIndex];
+              if (subjectScores[subjectIndex] > subjectScores[selectedIndex]) selectedIndex = subjectIndex;
+            }
+            subjectScores[selectedIndex] -= totalWeight;
+            const minutes = Math.min(sessionLength, remainingMinutes);
+            sessions.push({
+              subject: subjects[selectedIndex].name,
+              minutes
+            });
+            remainingMinutes -= minutes;
+          }
+          return { date, sessions };
+        });
+
+        const examDateLabel = examDate.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        const subjectLabel = subjects.slice(0, 2).map((subject) => subject.name).join(", ");
+        const extraSubjects = subjects.length > 2 ? ` +${subjects.length - 2}` : "";
+        let title = `${subjectLabel}${extraSubjects} · ${examDateLabel}`;
+        const duplicateCount = savedPlans.filter((savedPlan) => savedPlan.title === title).length;
+        if (duplicateCount) title += ` (${duplicateCount + 1})`;
+        const newPlan = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          title,
+          examDate: dateInput.value,
+          minutesPerDay: studyMinutes,
+          startTime,
+          breakMinutes,
+          days: plan.map(({ date, sessions }) => ({
+            date: isoDate(date),
+            sessions
+          }))
+        };
+        savedPlans = [newPlan, ...savedPlans];
+        activePlanId = newPlan.id;
+        if (!persistSavedPlans()) {
+          savedPlans = savedPlans.slice(1);
+          activePlanId = savedPlans[0]?.id ?? null;
+          showActivePlan();
+          return;
+        }
+        error.textContent = "";
+        showActivePlan();
+      }
+
+      function formatClockTime(minutes) {
+        const normalized = ((minutes % 1440) + 1440) % 1440;
+        const date = new Date(2000, 0, 1, Math.floor(normalized / 60), normalized % 60);
+        return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      }
+
+      function formatTime(time) {
+        const [hours, minutes] = time.split(":").map(Number);
+        return formatClockTime(hours * 60 + minutes);
+      }
+
+      function getTimedSessions(sessions, startTime, breakMinutes) {
+        const [hours, minutes] = startTime.split(":").map(Number);
+        let cursor = hours * 60 + minutes;
+        return sessions.map((session, index) => {
+          const start = cursor;
+          const end = start + session.minutes;
+          cursor = end + (index < sessions.length - 1 ? breakMinutes : 0);
+          return {
+            ...session,
+            startLabel: formatClockTime(start),
+            endLabel: formatClockTime(end)
+          };
+        });
+      }
+
+      function renderPlan(plan) {
+        const examDate = new Date(`${plan.examDate}T00:00:00`);
+        const startTime = plan.startTime || "18:00";
+        const breakMinutes = Number.isInteger(plan.breakMinutes) ? plan.breakMinutes : 10;
+        document.getElementById("empty-state").hidden = true;
+        document.getElementById("results-content").classList.add("visible");
+        const daysLeft = Math.max(0, Math.ceil((examDate - today) / 86400000));
+        document.title = `${plan.title} — Studyflow`;
+        document.getElementById("plan-subtitle").textContent =
+          `${daysLeft} ${daysLeft === 1 ? "day" : "days"} until your exam · ${examDate.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })} · Starts ${formatTime(startTime)}`;
+        document.getElementById("stat-days").textContent = plan.days.length;
+        const totalMinutes = plan.days.reduce((sum, day) =>
+          sum + day.sessions.reduce((daySum, session) => daySum + session.minutes, 0), 0);
+        const totalHours = totalMinutes / 60;
+        document.getElementById("stat-hours").textContent = Number.isInteger(totalHours) ? totalHours : totalHours.toFixed(1);
+        document.getElementById("stat-sessions").textContent = plan.days.reduce((sum, day) => sum + day.sessions.length, 0);
+        const schedule = document.getElementById("schedule");
+        schedule.replaceChildren();
+        plan.days.forEach(({ date: dateString, sessions }) => {
+          const date = new Date(`${dateString}T00:00:00`);
+          const timedSessions = getTimedSessions(sessions, startTime, breakMinutes);
+          const day = document.createElement("div");
+          day.className = "schedule-day";
+          const heading = document.createElement("div");
+          heading.className = "date-heading";
+          const title = document.createElement("strong");
+          title.textContent = date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+          const total = sessions.reduce((sum, session) => sum + session.minutes, 0);
+          const time = document.createElement("span");
+          time.textContent = `${(total / 60).toFixed(total % 60 ? 1 : 0)} hr total`;
+          heading.append(title, time);
+          day.append(heading);
+          timedSessions.forEach((session) => {
+            const item = document.createElement("div");
+            item.className = "session";
+            const dot = document.createElement("span");
+            dot.className = "session-dot";
+            dot.setAttribute("aria-hidden", "true");
+            const name = document.createElement("span");
+            name.className = "session-name";
+            name.textContent = session.subject;
+            const duration = document.createElement("span");
+            duration.className = "session-duration";
+            duration.textContent = `${session.startLabel}–${session.endLabel} · ${session.minutes} min`;
+            item.append(dot, name, duration);
+            day.append(item);
+          });
+          schedule.append(day);
+        });
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        createPlan();
+      });
+
+      document.getElementById("saved-plan-select").addEventListener("change", (event) => {
+        activePlanId = event.target.value;
+        showActivePlan();
+      });
+
+      document.getElementById("delete-plan").addEventListener("click", () => {
+        const deletedIndex = savedPlans.findIndex((plan) => plan.id === activePlanId);
+        if (deletedIndex === -1) return;
+        const deletedPlans = savedPlans;
+        savedPlans = savedPlans.filter((plan) => plan.id !== activePlanId);
+        if (!persistSavedPlans()) {
+          savedPlans = deletedPlans;
+          return;
+        }
+        activePlanId = savedPlans[Math.min(deletedIndex, savedPlans.length - 1)]?.id ?? null;
+        showActivePlan();
+      });
+
+      document.getElementById("print-plan").addEventListener("click", () => window.print());
+      document.getElementById("download-plan").addEventListener("click", () => {
+        const activePlan = savedPlans.find((plan) => plan.id === activePlanId);
+        if (!activePlan) return;
+        try {
+          const pdf = createPlanPdf(activePlan);
+          const url = URL.createObjectURL(pdf);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `${activePlan.title.replace(/[<>:"/\\|?*\x00-\x1F]/g, "-").replace(/\s+/g, "_")}.pdf`;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+          error.textContent = "";
+        } catch (downloadError) {
+          error.textContent = `Unable to create the PDF: ${downloadError.message}`;
+        }
+      });
+
+      function createPlanPdf(plan) {
+        const pageWidth = 595;
+        const pageHeight = 842;
+        const left = 48;
+        const right = 547;
+        const contentWidth = right - left;
+        const pages = [];
+        const textValue = (value) => String(value)
+          .replace(/[·•]/g, " - ")
+          .replace(/[–—]/g, "-")
+          .replace(/[’‘]/g, "'")
+          .replace(/[“”]/g, '"')
+          .normalize("NFKD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^\x20-\x7E]/g, "?");
+        const escapeText = (value) => textValue(value).replace(/[\\()]/g, "\\$&");
+        const dateLabel = (dateString, options) =>
+          new Date(`${dateString}T00:00:00`).toLocaleDateString(undefined, options);
+        const totalMinutes = plan.days.reduce((sum, day) =>
+          sum + day.sessions.reduce((daySum, session) => daySum + session.minutes, 0), 0);
+        const totalSessions = plan.days.reduce((sum, day) => sum + day.sessions.length, 0);
+        const examDate = new Date(`${plan.examDate}T00:00:00`);
+        const startTime = plan.startTime || "18:00";
+        const breakMinutes = Number.isInteger(plan.breakMinutes) ? plan.breakMinutes : 10;
+        const addText = (commands, value, x, top, size, bold = false, color = "0.13 0.19 0.16") => {
+          const baseline = pageHeight - top - size;
+          commands.push(`BT /${bold ? "F2" : "F1"} ${size} Tf ${color} rg 1 0 0 1 ${x} ${baseline} Tm (${escapeText(value)}) Tj ET`);
+        };
+        const addRect = (commands, x, top, width, height, color) => {
+          commands.push(`${color} rg ${x} ${pageHeight - top - height} ${width} ${height} re f`);
+        };
+        const addLine = (commands, x1, top1, x2, top2, color, width = 1) => {
+          commands.push(`${color} RG ${width} w ${x1} ${pageHeight - top1} m ${x2} ${pageHeight - top2} l S`);
+        };
+        const newPage = (firstPage) => {
+          const commands = [];
+          addRect(commands, 0, 0, pageWidth, 7, "0.16 0.39 0.31");
+          addText(commands, "STUDYFLOW", left, 25, 9, true, "0.16 0.39 0.31");
+          addText(commands, "Your study plan", left, firstPage ? 51 : 48, firstPage ? 26 : 20, true);
+          addText(commands, `Exam date: ${dateLabel(plan.examDate, { month: "long", day: "numeric", year: "numeric" })}`, left, firstPage ? 87 : 77, 10, false, "0.35 0.41 0.37");
+          addText(commands, `Daily start: ${formatTime(startTime)} - Breaks: ${breakMinutes} min`, left, firstPage ? 101 : 92, 8, false, "0.35 0.41 0.37");
+          let startY = firstPage ? 121 : 111;
+          if (firstPage) {
+            const stats = [
+              [`${plan.days.length}`, "STUDY DAYS"],
+              [`${(totalMinutes / 60).toFixed(totalMinutes % 60 ? 1 : 0)}`, "PLANNED HOURS"],
+              [`${totalSessions}`, "STUDY SESSIONS"]
+            ];
+            const gap = 10;
+            const statWidth = (contentWidth - gap * 2) / 3;
+            stats.forEach(([value, label], index) => {
+              const x = left + index * (statWidth + gap);
+              addRect(commands, x, 112, statWidth, 49, "0.95 0.97 0.95");
+              addText(commands, value, x + 12, 119, 17, true, "0.16 0.39 0.31");
+              addText(commands, label, x + 12, 141, 7, true, "0.39 0.45 0.41");
+            });
+            startY = 179;
+          }
+          pages.push({ commands, startY });
+          return pages[pages.length - 1];
+        };
+        let page = newPage(true);
+        plan.days.forEach((day) => {
+          const dayDate = new Date(`${day.date}T00:00:00`);
+          const label = dayDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+          const dayTotal = day.sessions.reduce((sum, session) => sum + session.minutes, 0);
+          const timedSessions = getTimedSessions(day.sessions, startTime, breakMinutes);
+          let sessionIndex = 0;
+          while (sessionIndex < timedSessions.length) {
+            if (page.startY + 50 > 790) page = newPage(false);
+            addRect(page.commands, left, page.startY, contentWidth, 22, "0.91 0.95 0.91");
+            const continuedLabel = sessionIndex > 0 ? `${label} (continued)` : label;
+            addText(page.commands, continuedLabel, left + 10, page.startY + 5, 10, true, "0.13 0.28 0.22");
+            const hoursLabel = `${(dayTotal / 60).toFixed(dayTotal % 60 ? 1 : 0)} hr`;
+            addText(page.commands, hoursLabel, right - hoursLabel.length * 6.1 - 10, page.startY + 6, 9, false, "0.35 0.41 0.37");
+            page.startY += 27;
+            const sessionsThatFit = Math.min(timedSessions.length - sessionIndex, Math.floor((790 - page.startY) / 23));
+            for (const session of timedSessions.slice(sessionIndex, sessionIndex + sessionsThatFit)) {
+              addRect(page.commands, left + 11, page.startY + 7, 5, 5, "0.35 0.58 0.44");
+              addText(page.commands, session.subject, left + 25, page.startY + 3, 9, true);
+              const duration = `${session.startLabel} - ${session.endLabel} (${session.minutes} min)`;
+              addText(page.commands, duration, right - duration.length * 4.2 - 11, page.startY + 3, 7, false, "0.39 0.45 0.41");
+              addLine(page.commands, left + 25, page.startY + 20, right - 10, page.startY + 20, "0.91 0.93 0.91", 0.5);
+              page.startY += 23;
+            }
+            sessionIndex += sessionsThatFit;
+            page.startY += 6;
+            if (sessionIndex < timedSessions.length) page = newPage(false);
+          }
+        });
+        pages.forEach(({ commands }, index) => {
+          addLine(commands, left, 806, right, 806, "0.86 0.89 0.86", 0.7);
+          addText(commands, "Studyflow - a plan you can actually follow", left, 814, 8, false, "0.39 0.45 0.41");
+          const pageNumber = `Page ${index + 1} of ${pages.length}`;
+          addText(commands, pageNumber, right - pageNumber.length * 4.5, 814, 8, false, "0.39 0.45 0.41");
+        });
+
+        const objects = [];
+        objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+        objects[2] = `<< /Type /Pages /Kids [${pages.map((_, index) => `${5 + index * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`;
+        objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+        objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+        pages.forEach(({ commands }, index) => {
+          const pageObject = 5 + index * 2;
+          const contentObject = pageObject + 1;
+          const stream = commands.join("\n");
+          objects[pageObject] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >>`;
+          objects[contentObject] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+        });
+        let pdf = "%PDF-1.4\n";
+        const offsets = [0];
+        for (let id = 1; id < objects.length; id += 1) {
+          offsets[id] = pdf.length;
+          pdf += `${id} 0 obj\n${objects[id]}\nendobj\n`;
+        }
+        const xrefOffset = pdf.length;
+        pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+        for (let id = 1; id < objects.length; id += 1) {
+          pdf += `${String(offsets[id]).padStart(10, "0")} 00000 n \n`;
+        }
+        pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+        return new Blob([pdf], { type: "application/pdf" });
+      }
+    })();
+  </script>
+</body>
+</html>
