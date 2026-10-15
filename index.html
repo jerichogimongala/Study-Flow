@@ -4,8 +4,56 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f8f3">
-  <title>Studyflow — your exam study planner</title>
-  <meta name="description" content="Build a calm, realistic study schedule for your next exam. Free, private, and no account needed.">
+  <title>Free Exam Study Planner &amp; Study Schedule Maker | StudyFlow</title>
+  <meta name="description" content="Create a free exam study schedule with StudyFlow. Plan subjects, study days, sessions and breaks, then download your timetable as a PDF. No account needed.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://studyflow-exam-planner.netlify.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="StudyFlow">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://studyflow-exam-planner.netlify.app/">
+  <meta property="og:title" content="StudyFlow — Free Exam Study Planner">
+  <meta property="og:description" content="Build a realistic study timetable around your exam date, subjects and available time. Free, private, and ready to print or download as a PDF.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="StudyFlow — Free Exam Study Planner">
+  <meta name="twitter:description" content="Plan your exam revision with study sessions, subject priorities and breaks. Download your free study schedule as a PDF.">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://studyflow-exam-planner.netlify.app/#website",
+      "url": "https://studyflow-exam-planner.netlify.app/",
+      "name": "StudyFlow",
+      "inLanguage": "en"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://studyflow-exam-planner.netlify.app/#planner",
+      "name": "StudyFlow Exam Study Planner",
+      "url": "https://studyflow-exam-planner.netlify.app/",
+      "description": "A free exam study planner that creates a study schedule around your exam date, subjects, available days, study sessions and breaks.",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any operating system with a modern web browser",
+      "browserRequirements": "Requires JavaScript.",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Study schedules based on exam date and available days",
+        "Subject priorities based on confidence",
+        "Configurable study sessions and breaks",
+        "Save multiple plans in the current browser",
+        "PDF download and printing"
+      ]
+    }
+  ]
+}
+  </script>
   <style>
     :root {
       color-scheme: light;
@@ -140,8 +188,20 @@
     .session-duration { color: var(--muted); font-size: 11px; }
     .rest-day { color: #7f8981; font-size: 12px; padding: 7px 0 2px; }
     .footer-note { border-top: 1px solid var(--line); padding: 16px 25px; background: #fbfcfa; color: var(--muted); font-size: 11px; }
+    .planner-guide { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
+    .planner-guide h2 { font-size: 25px; margin-bottom: 14px; }
+    .planner-guide h3 { font-size: 17px; margin: 24px 0 8px; }
+    .planner-guide p, .planner-guide li { color: var(--muted); }
+    .guide-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; }
+    .planner-guide ol { padding-left: 22px; }
+    .planner-guide li { margin-bottom: 12px; }
+    .planner-guide details { padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .planner-guide summary { cursor: pointer; font-weight: 650; }
+    .planner-guide details p { margin: 10px 0 0; }
+    .planner-guide a { color: var(--green); text-underline-offset: 3px; }
+    .planner-guide a:focus-visible, .planner-guide summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
     @media (max-width: 800px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout, .guide-grid { grid-template-columns: 1fr; }
       .setup { padding: 22px; }
       .results, .empty-state { min-height: 330px; }
       .empty-state { padding: 36px 24px; }
@@ -172,7 +232,7 @@
     @media print {
       @page { margin: 16mm 14mm; }
       body { background: white; color: #202b27; font: 10pt/1.45 Arial, sans-serif; }
-      .topbar, .intro, .setup, .actions, .footer-note { display: none !important; }
+      .topbar, .intro, .setup, .actions, .footer-note, .planner-guide { display: none !important; }
       main { max-width: none; padding: 0; }
       .layout { display: block; }
       .card { min-height: 0; overflow: visible; border: 0; box-shadow: none; }
@@ -206,9 +266,9 @@
   </header>
   <main>
     <section class="intro">
-      <div class="eyebrow">A little structure goes a long way</div>
-      <h1>Make a plan.<br>Keep your head clear.</h1>
-      <p>Tell us what you're studying. We'll turn the days ahead into a plan you can actually follow.</p>
+      <div class="eyebrow">StudyFlow · Free study schedule maker</div>
+      <h1>Your exam study planner.<br>Keep your head clear.</h1>
+      <p>Create a realistic study timetable around your exam date, subjects and available time. Plan revision sessions and breaks for free, with no account needed.</p>
     </section>
 
     <div class="layout">
@@ -317,6 +377,47 @@
         </div>
       </section>
     </div>
+    <section class="planner-guide" aria-labelledby="guide-heading">
+      <div class="guide-grid">
+        <div>
+          <h2 id="guide-heading">How to create your exam study schedule</h2>
+          <p>StudyFlow turns your revision time into a daily plan. Use it to organize multiple subjects, give extra attention to topics that need work, and fit studying around the days you have available.</p>
+          <ol>
+            <li><strong>Set your exam date and available time.</strong> Choose your study days, daily study hours and starting time.</li>
+            <li><strong>Add your subjects.</strong> Select how confident you feel in each subject so the planner can assign more sessions to the ones that need work.</li>
+            <li><strong>Choose your session length and breaks.</strong> Shorter sessions can make it easier to start; scheduled breaks give you time to rest between subjects.</li>
+            <li><strong>Build and save your timetable.</strong> Review your schedule, download a PDF or print it. Create a new plan when your availability changes.</li>
+          </ol>
+          <p><a href="#planner-form">Create your free study plan</a></p>
+          <h3>Make your revision sessions count</h3>
+          <p>Use each session for a specific task, such as recalling key concepts, answering practice questions or reviewing mistakes. Revisit difficult topics across several days and leave time for rest as your exam approaches.</p>
+        </div>
+        <div>
+          <h2>Study planner questions</h2>
+          <details>
+            <summary>Is StudyFlow free to use?</summary>
+            <p>Yes. You can create exam study schedules, save plans in your browser, and download or print them for free. No account is required.</p>
+          </details>
+          <details>
+            <summary>Can I plan revision for multiple subjects?</summary>
+            <p>Yes. Add your subjects and mark each one as Needs work, Getting there or Confident. StudyFlow gives more study sessions to subjects where you feel less confident.</p>
+          </details>
+          <details>
+            <summary>Can I download my study timetable?</summary>
+            <p>Yes. After creating a plan, use Download PDF to save a copy or Print selected to print your timetable. If you have several saved plans, choose the one you want first.</p>
+          </details>
+          <details>
+            <summary>Where are my study plans saved?</summary>
+            <p>Plans are saved only in your current browser on this device. They do not sync across devices, and clearing your browser's site data removes them. Download a PDF to keep a portable copy.</p>
+          </details>
+          <details>
+            <summary>Can I choose study days and breaks?</summary>
+            <p>Yes. Select the weekdays you can study, your daily study hours, your start time, and your preferred session and break lengths before building your plan.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+    <noscript><p>Enable JavaScript to generate your study schedule. You can still read the study planning guide and answers above.</p></noscript>
   </main>
   <script>
     (() => {
